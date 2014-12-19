@@ -70,9 +70,14 @@
   when: result|failed
 
 - name: NGinx | Apply site conf file
-  template: src=site.com.j2 dest=/etc/nginx/sites-enabled/{{ app_name }} owner=root group=root
+  template: src=site_nossl.com.j2 dest=/etc/nginx/sites-enabled/{{ app_name }} owner=root group=root
   sudo: yes
   when: result|failed
+
+- name: NGinx | Apply site conf file
+  template: src=site.com.j2 dest=/etc/nginx/sites-enabled/{{ app_name }} owner=root group=root
+  sudo: yes
+  when: result|failed and ssl == 'yes'
 
 - name: NGinx | Create SSL directory
   file: path=/etc/nginx/ssl/ state=directory owner=root group=root
@@ -90,7 +95,7 @@ name: NGinx | Copy SSL Certs to server
       paths:
         - ../../../projects/{{ app_name }}/files/ssl
         - ../files/ssl
-  when: ssl == 'yes'
+  when: result|failed and ssl == 'yes'
 
 - name: NGinx | Copy SSL Certs to server
   copy: src={{ item }} dest=/etc/nginx/ssl/ owner=root group=root force=yes
@@ -103,4 +108,4 @@ name: NGinx | Copy SSL Certs to server
         - ../files/ssl
   notify:
     - restart nginx
-  when: ssl == 'yes'
+  when: result|failed and ssl == 'yes'

@@ -4,12 +4,6 @@ upstream {{ app_name }} {
 
 server {
         listen 80;
-        listen 443 ssl;
-
-        ssl_certificate           /etc/nginx/ssl/server.crt;
-        ssl_certificate_key       /etc/nginx/ssl/server.key;
-        ssl_protocols             SSLv3 TLSv1;
-        ssl_ciphers               ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
 
         server_name {{ domains|join(' ') }};
         root {{ app_path }}/current/public;

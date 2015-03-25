@@ -1,0 +1,10 @@
+server {
+    listen    80    default_server;
+    root {{ app_path }}/current/public;
+    error_page 403 @403;
+    try_files $uri =403;
+
+    location @403 {
+      rewrite ^(.*)$ /403.html break;
+    }
+}

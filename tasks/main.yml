@@ -1,10 +1,10 @@
 ---
-- name: NGinx | Check if installed
-  shell: /usr/bin/test `nginx -v 2>&1 | grep "nginx" | awk '{gsub("nginx/","",$3); print $3}'` = {{ nginx_version }} && echo True
+- name: Check if installed
+  shell: /usr/bin/test `nginx -v 2>&1 | grep "nginx" | awk '{gsub("nginx/","",$3); print $3}'` = {{ nginx.version }} && echo True
   register: result
   ignore_errors: yes
 
-- name: Nginx | Install dependancies
+- name: Install dependancies
   action: apt pkg={{ item }} state=present
   sudo: yes
   when: result|failed
@@ -14,98 +14,74 @@
     - libgd2-xpm-dev
     - libgeoip-dev
     - libpam0g-dev
+    - libcurl4-gnutls-dev
     - zlibc
     - zlib1g
     - zlib1g-dev
 
-- name: NGinx | Download Source
-  get_url: url=http://nginx.org/download/nginx-{{ nginx_version }}.tar.gz dest=/opt/
+- name: Download Source
+  get_url: url=http://nginx.org/download/nginx-{{ nginx.version }}.tar.gz dest=/opt/
   sudo: yes
   when: result|failed
 
-- name: NGinx | Unzip
-  shell: /bin/tar xvfz nginx-{{ nginx_version }}.tar.gz chdir=/opt
+- name: Unzip Nginx Tar
+  unarchive: src=nginx-{{ nginx.version }}.tar.gz dest=/opt copy=no group=deploy owner=deploy
   sudo: yes
   when: result|failed
 
-- name: NGinx | Take Ownership of Folder
-  shell: /bin/chown -hR deploy:deploy  /opt/nginx-{{ nginx_version }}
+- name: Take Ownership of Folder
+  file: path=/opt/nginx-{{ nginx.version }} owner=deploy group=deploy recurse=yes state=directory
   sudo: yes
   when: result|failed
 
-- name: NGinx | Download Third Party modules
-  shell: /usr/bin/wget http://www.dropbox.com/s/e3n2lin6dvqlaos/modules.tar.gz chdir=/opt/nginx-{{ nginx_version }}
+- name: Download Third Party modules
+  get_url: url=http://www.dropbox.com/s/e3n2lin6dvqlaos/modules.tar.gz dest=/opt/nginx-{{ nginx.version }}
   when: result|failed
 
-- name: NGinx | Unzip
-  shell: /bin/tar xvfz modules.tar.gz chdir=/opt/nginx-{{ nginx_version }}
+- name: Unzip Modules
+  unarchive: src=modules.tar.gz dest=/opt/nginx-{{ nginx.version }} copy=no group=deploy owner=deploy
   when: result|failed
 
-- name: NGinx | Change Directory & Configure
-  shell: ./configure --user=www-data --group=www-data --prefix=/opt/nginx --sbin-path=/usr/sbin --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --lock-path=/var/run/nginx.lock --pid-path=/var/run/nginx.pid --with-http_geoip_module --with-http_gzip_static_module --with-http_realip_module --with-http_stub_status_module --with-http_ssl_module --with-http_sub_module --with-http_xslt_module --with-ipv6 --with-sha1=/usr/include/openssl --with-md5=/usr/include/openssl --with-mail --with-mail_ssl_module --add-module=modules/ngx_http_auth_pam_module-1.2 --add-module=modules/echo-nginx-module-0.51 --add-module=modules/nginx-upstream-fair --add-module=modules/nginx-dav-ext-module-0.0.3 chdir=/opt/nginx-{{ nginx_version }}
-  when: result|failed
+- include: passenger.yml
+  when: nginx.passenger == "true"
 
-- name: NGinx | Make
-  shell: /usr/bin/make chdir=/opt/nginx-{{ nginx_version }}
+- name: Change Directory & Configure
+  shell: ./configure --user=www-data --group=www-data --prefix=/opt/nginx --sbin-path=/usr/sbin --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --lock-path=/var/run/nginx.lock --pid-path=/var/run/nginx.pid --with-http_geoip_module --with-http_gzip_static_module --with-http_realip_module --with-http_stub_status_module --with-http_ssl_module --with-http_sub_module --with-http_xslt_module --with-ipv6 --with-sha1=/usr/include/openssl --with-md5=/usr/include/openssl --with-mail --with-mail_ssl_module --add-module=modules/ngx_http_auth_pam_module-1.2 --add-module=modules/echo-nginx-module-0.51 --add-module=modules/nginx-upstream-fair --add-module=modules/nginx-dav-ext-module-0.0.3 chdir=/opt/nginx-{{ nginx.version }}
   when: result|failed
+  when: nginx.passenger == "false"
 
-- name: NGinx | Make Install
-  shell: /usr/bin/make install chdir=/opt/nginx-{{ nginx_version }}/
+- name: Make
+  shell: /usr/bin/make chdir=/opt/nginx-{{ nginx.version }}
   sudo: yes
   when: result|failed
 
-- name: NGinx | copy init.d configuration file
-  copy: src=nginx_upstart.conf.j2 dest=/etc/init/nginx.conf
+- name: Make Install
+  shell: /usr/bin/make install chdir=/opt/nginx-{{ nginx.version }}/
   sudo: yes
   when: result|failed
 
-- name: NGinx | Create Sites Enabled Directory
+- name: copy init.d configuration file
+  copy: src=nginx_upstart.conf dest=/etc/init/nginx.conf
+  sudo: yes
+  when: result|failed
+
+- name: Create conf.d Directory
+  file: path=/etc/nginx/conf.d state=directory owner=root group=root
+  sudo: yes
+  when: result|failed
+
+- name: Create Sites Enabled Directory
   file: path=/etc/nginx/sites-enabled state=directory owner=root group=root
   sudo: yes
   when: result|failed
 
-- name:  Nginx | Custom Config template placement
-  template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf  owner=root group=root
-  sudo: yes
-  when: result|failed
-
-- name: NGinx | Apply site conf file
-  template: src=site_nossl.com.j2 dest=/etc/nginx/sites-enabled/{{ app_name }} owner=root group=root
-  sudo: yes
-  when: result|failed
-
-- name: NGinx | Apply site conf file
-  template: src=site.com.j2 dest=/etc/nginx/sites-enabled/{{ app_name }} owner=root group=root
-  sudo: yes
-  when: result|failed and ssl == 'yes'
-
-- name: NGinx | Create SSL directory
+- name: Create SSL directory
   file: path=/etc/nginx/ssl/ state=directory owner=root group=root
   sudo: yes
-  notify:
-    - restart nginx
   when: result|failed
 
-name: NGinx | Copy SSL Certs to server
-  copy: src={{ item }} dest=/etc/nginx/ssl/ owner=root group=root force=yes
-  sudo: yes
-  with_first_found:
-    - files:
-        - "server.crt"
-      paths:
-        - ../../../projects/{{ app_name }}/files/ssl
-        - ../files/ssl
-  when: result|failed and ssl == 'yes'
+- include: custom.yml
+  when: custom == "true"
 
-- name: NGinx | Copy SSL Certs to server
-  copy: src={{ item }} dest=/etc/nginx/ssl/ owner=root group=root force=yes
-  sudo: yes
-  with_first_found:
-    - files:
-        - "server.key"
-      paths:
-        - ../../../projects/{{ app_name }}/files/ssl
-        - ../files/ssl
-  notify:
-    - restart nginx
-  when: result|failed and ssl == 'yes'
+- include: ssl.yml
+  when: ssl == "true"

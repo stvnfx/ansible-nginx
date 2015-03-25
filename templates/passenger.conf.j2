@@ -1,0 +1,16 @@
+  ##
+  # Passenger Config
+  ##
+
+  passenger_root /opt/passenger-release-5.0.0.rc2;
+  passenger_ruby /usr/local/bin/ruby;
+  passenger_max_pool_size 15;
+  passenger_min_instances 1;
+  passenger_pool_idle_time 300;
+  passenger_log_level 2;
+  passenger_user deploy;
+  passenger_group deploy;
+  passenger_user_switching off;
+  passenger_pre_start {{ nginx.passenger.prestart }};
+  passenger_instance_registry_dir /tmp;
+  passenger_app_env {{ server_env }};

@@ -1,0 +1,23 @@
+---
+- name: Check if installed
+  shell: /usr/bin/test `cat /home/deploy/sudoers.test 2>&1 | grep "passenger" | gawk '{gsub("passenger","",$1);print $1}'` && echo True
+  register: sudoers
+  ignore_errors: yes
+  sudo: yes
+
+# - lineinfile: |
+#     dest=/home/deploy/sudoers.test state=present regexp='^Defaults( +)secure_path="(.*)(:/opt/passenger/bin)"' line='Defaults\1secure_path="\2:/opt/passenger/bin"' backrefs=yes
+#   sudo: yes
+
+- name: ensure sudoers.d is enabled
+  lineinfile: |
+    dest=/home/deploy/sudoers.test state=present regexp='^Defaults( +)secure_path="(.*)"' line='Defaults\1secure_path="\2:/opt/passenger/bin"' backrefs=yes
+  sudo: yes
+  when: sudoers|failed
+
+- name: ensure sudoers.d is enabled
+  lineinfile: "dest=/etc/profile.d/passenger-path.sh state=present regexp='^' line='export PATH=:/opt/passenger/bin:$PATH' create=true"
+  sudo: yes
+
+- name: symlink passenger directory
+  file: src=/opt/passenger-release-{{ passenger_version }} path=/opt/passenger state=link force=yes

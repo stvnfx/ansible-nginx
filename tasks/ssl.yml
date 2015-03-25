@@ -1,0 +1,20 @@
+---
+- name: Copy SSL Certs to server
+  copy: src={{ item }} dest=/etc/nginx/ssl/ owner=root group=root force=yes
+  sudo: yes
+  with_first_found:
+    - files:
+        - "server.crt"
+      paths:
+        - ../../../projects/{{ app_name }}/files/ssl
+        - ../files/ssl
+
+- name: Copy SSL Certs to server
+  copy: src={{ item }} dest=/etc/nginx/ssl/ owner=root group=root force=yes
+  sudo: yes
+  with_first_found:
+    - files:
+        - "server.key"
+      paths:
+        - ../../../projects/{{ app_name }}/files/ssl
+        - ../files/ssl

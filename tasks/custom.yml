@@ -1,0 +1,17 @@
+---
+- name: Apply defaultserver conf file
+  template: src=defaultserver.j2 dest=/etc/nginx/sites-enabled/zzzzzdefaultserver owner=root group=root
+  sudo: yes
+
+- name: Apply site conf file
+  template: src=site.com.j2 dest=/etc/nginx/sites-enabled/{{ app_name }} owner=root group=root
+  sudo: yes
+
+- name:  Custom Config template placement
+  template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf  owner=root group=root force=yes
+  sudo: yes
+
+- name:  Custom Config template placement
+  template: src=passenger.nginx.conf.j2 dest=/etc/nginx/nginx.conf  owner=root group=root force=yes
+  sudo: yes
+  when: nginx.passenger == "true"

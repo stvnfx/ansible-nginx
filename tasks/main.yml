@@ -25,7 +25,7 @@
   when: result|failed
 
 - name: Unzip Nginx Tar
-  unarchive: src=nginx-{{ nginx.version }}.tar.gz dest=/opt copy=no group=deploy owner=deploy
+  unarchive: src=/opt/nginx-{{ nginx.version }}.tar.gz dest=/opt copy=no group=deploy owner=deploy
   sudo: yes
   when: result|failed
 
@@ -39,7 +39,7 @@
   when: result|failed
 
 - name: Unzip Modules
-  unarchive: src=modules.tar.gz dest=/opt/nginx-{{ nginx.version }} copy=no group=deploy owner=deploy
+  unarchive: src=/opt/nginx-{{ nginx.version }}/modules.tar.gz dest=/opt/nginx-{{ nginx.version }} copy=no group=deploy owner=deploy
   when: result|failed
 
 - include: passenger.yml

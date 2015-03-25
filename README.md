@@ -14,9 +14,8 @@ This Ansible role that installs `nginx` and its dependencies:
 * `zlib1g`
 * `zlib1g-dev`
 
-This role requires self-signed certs placed in `files/ssl` or third-party certs placed in `{{ app_name }}/files/ssl/` (found in the root of the ansible roles directory).
+This role requires self-signed certs placed in `files/ssl` or third-party certs placed in `{{ app_name }}/files/ssl/` (found in the root of the ansible roles directory). This role also has the option to install Nginx with the passenger module.
 
-Finally it sets the default timezone for the server.  We use this as the base image for all our Ruby and Node.js applications.
 
 ## Installation
 

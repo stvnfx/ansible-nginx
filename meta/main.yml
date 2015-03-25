@@ -14,5 +14,6 @@ galaxy_info:
     - development
     - web
     - system
-dependencies: []
+dependencies:
+  - ansible-users
 version: 1.0.0

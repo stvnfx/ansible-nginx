@@ -13,6 +13,9 @@ dependencies:
 
     # Add ansible.cfg to pick up roles path.
     - "printf '[defaults]\nroles_path = ../' > ansible.cfg"
+
+    # Get Users Role
+    - ansible-galaxy install -f https://github.com/crushlovely/ansible-users.git,remotes/origin/dev -p ./tests/
 test:
   override:
     # Get users role

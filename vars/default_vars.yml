@@ -1,0 +1,8 @@
+---
+app_name: test
+nginx:
+  version: 1.6.2
+  upstream_port: 5000
+  ssl: false
+  passenger: true
+  updates: true

@@ -17,7 +17,7 @@ dependencies:
 test:
   override:
     # Get Users Role
-    - ansible-galaxy install -f https://github.com/crushlovely/ansible-users.git,remotes/origin/dev -p ./tests/
+    - ansible-galaxy install -f https://github.com/crushlovely/ansible-users.git,remotes/origin/$CIRCLE_BRANCHG -p ./tests/
 
     # Get nginx role
     - ansible-galaxy install -f https://github.com/crushlovely/ansible-nginx.git,remotes/origin/$CIRCLE_BRANCH -p ./tests/
